@@ -16,7 +16,7 @@
       content: params.get("utm_content"),
     };
   
-    var endpoint = "https://webtracker.avikmukherjee.tech/api/track";
+    var endpoint = "https://webtracker.avikmukherjee.me/api/track";
     var sessionDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
   
     // Visitor identification (anonymous)
