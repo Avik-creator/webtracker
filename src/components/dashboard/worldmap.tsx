@@ -1,10 +1,13 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
+import React from "react";
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+  ZoomableGroup,
+} from "react-simple-maps";
 import { scaleQuantile } from "d3-scale";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Globe } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -36,131 +39,132 @@ const WorldMap = ({ countryData, isLoading }: WorldMapProps) => {
     value: number;
   } | null>(null);
 
-
-
-  // Process the country data for mapping
+  // Process the country data for mapping (ensure numeric values)
   const dataMap = new Map();
   countryData.forEach((item) => {
     // Ensure country codes are uppercase for consistent matching
     const countryCode = item.countryCode.toUpperCase();
     dataMap.set(countryCode, {
       name: item.countryName,
-      value: item.visitors
+      value: Number(item.visitors) || 0,
     });
   });
 
-
-  
-  // Create color scale based on visitor numbers
+  // Create color scale based on visitor numbers - using grayscale for dark theme
   const colorScale = scaleQuantile<string>()
-    .domain(countryData.length > 0 ? countryData.map(d => d.visitors) : [0])
+    .domain(
+      countryData.length > 0
+        ? countryData.map((d) => Number(d.visitors) || 0)
+        : [0]
+    )
     .range([
-      "#cfe2ff", // lightest blue
-      "#93c5fd",
-      "#60a5fa",
-      "#3b82f6",
-      "#1d4ed8"  // darkest blue
+      "#3f3f46", // zinc-700
+      "#52525b", // zinc-600
+      "#71717a", // zinc-500
+      "#a1a1aa", // zinc-400
+      "#d4d4d8", // zinc-300
     ]);
-  
+
   // Create a reverse mapping from country names to country codes
-  const countryNameToCode = Object.entries(countryNames).reduce((acc, [code, name]) => {
-    acc[name.toLowerCase()] = code;
-    return acc;
-  }, {} as Record<string, string>);
-  
+  const countryNameToCode = Object.entries(countryNames).reduce(
+    (acc, [code, name]) => {
+      acc[name.toLowerCase()] = code;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+
   return (
-    <Card className="shadow-md border-0 overflow-hidden dark:bg-zinc-900 dark:text-blue-100">
-      <CardHeader className="pb-2 px-4 border-b dark:border-zinc-800">
-        <CardTitle className="text-lg flex items-center text-blue-700 dark:text-blue-200">
-          <Globe className="h-5 w-5 mr-2 text-blue-500 dark:text-blue-300" />
-          Visitor World Map
-        </CardTitle>
-        <CardDescription className="dark:text-blue-200">Geographic distribution of your visitors</CardDescription>
-      </CardHeader>
-      <CardContent className="p-4">
-        <div className="h-96">
-          {isLoading ? (
-            <div className="h-full w-full flex items-center justify-center">
-              <p className="text-gray-500 dark:text-blue-200">Loading map data...</p>
-            </div>
-          ) : countryData.length > 0 ? (
-            <TooltipProvider>
-              <ComposableMap
-                projectionConfig={{ scale: 155 }}
-                width={800}
-                height={400}
-                style={{ width: "100%", height: "100%" }}
-              >
-                <ZoomableGroup>
-                  <Geographies geography={geoUrl}>
-                    {({ geographies }) =>
-  
-                      geographies.map(geo => {
-                        // If no ISO code found, try to map from country name
-                        const countryCode =  (geo.properties.name && countryNameToCode[geo.properties.name.toLowerCase()]);
-                        
-                        // Find matching country data
-                        const current = countryCode ? dataMap.get(countryCode) : null;
-                        
-                        return (
-                          <Tooltip key={geo.rsmKey}>
-                            <TooltipTrigger asChild>
-                              <Geography
-                                geography={geo}
-                                fill={current ? colorScale(current.value) : "#EEE"}
-                                stroke="#D6D6DA"
-                                strokeWidth={0.5}
-                                onMouseEnter={() => {
-                                  // Use different property names for country name
-                                  const countryName = 
-                                    geo.properties.NAME || 
-                                    geo.properties.name || 
-                                    geo.properties.ADMIN ||
-                                    countryNames[countryCode as keyof typeof countryNames] ||
-                                    "Unknown";
-                                    
-                                  setActiveCountry(current 
-                                    ? { name: countryName, value: current.value }
-                                    : { name: countryName, value: 0 });
-                                }}
-                                onMouseLeave={() => {
-                                  setActiveCountry(null);
-                                }}
-                                style={{
-                                  default: { outline: "none" },
-                                  hover: { 
-                                    fill: current ? "#2563eb" : "#F5F5F5", 
-                                    outline: "none",
-                                    cursor: "pointer" 
-                                  },
-                                  pressed: { outline: "none" },
-                                }}
-                              />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {activeCountry?.name}:  {(activeCountry?.value ?? 0) > 0 
-                                ? `${activeCountry?.value.toLocaleString()} visitors` 
-                                : "No visitors"}
-                            </TooltipContent>
-                          </Tooltip>
-                        );
-                      })
-                    }
-                  </Geographies>
-                </ZoomableGroup>
-              </ComposableMap>
-            </TooltipProvider>
-          ) : (
-            <div className="h-full w-full flex items-center justify-center">
-              <p className="text-gray-500 text-center dark:text-blue-200">
-                <span className="block text-4xl mb-2 text-blue-300 dark:text-blue-500">🗺️</span>
-                No country data available for map visualization
-              </p>
-            </div>
-          )}
+    <div className="h-full w-full">
+      {isLoading ? (
+        <div className="h-full w-full flex items-center justify-center">
+          <p className="text-zinc-500">Loading map data...</p>
         </div>
-      </CardContent>
-    </Card>
+      ) : countryData.length > 0 ? (
+        <TooltipProvider>
+          <ComposableMap
+            projectionConfig={{ scale: 155 }}
+            width={800}
+            height={400}
+            style={{ width: "100%", height: "100%" }}
+          >
+            <ZoomableGroup>
+              <Geographies geography={geoUrl}>
+                {({ geographies }) =>
+                  geographies.map((geo) => {
+                    // If no ISO code found, try to map from country name
+                    const countryCode =
+                      geo.properties.name &&
+                      countryNameToCode[geo.properties.name.toLowerCase()];
+
+                    // Find matching country data
+                    const current = countryCode
+                      ? dataMap.get(countryCode)
+                      : null;
+
+                    return (
+                      <Tooltip key={geo.rsmKey}>
+                        <TooltipTrigger asChild>
+                          <Geography
+                            geography={geo}
+                            fill={
+                              current ? colorScale(current.value) : "#27272a"
+                            }
+                            stroke="#18181b"
+                            strokeWidth={0.5}
+                            onMouseEnter={() => {
+                              // Use different property names for country name
+                              const countryName =
+                                geo.properties.NAME ||
+                                geo.properties.name ||
+                                geo.properties.ADMIN ||
+                                countryNames[
+                                  countryCode as keyof typeof countryNames
+                                ] ||
+                                "Unknown";
+
+                              setActiveCountry(
+                                current
+                                  ? { name: countryName, value: current.value }
+                                  : { name: countryName, value: 0 }
+                              );
+                            }}
+                            onMouseLeave={() => {
+                              setActiveCountry(null);
+                            }}
+                            style={{
+                              default: { outline: "none" },
+                              hover: {
+                                fill: current ? "#e4e4e7" : "#3f3f46",
+                                outline: "none",
+                                cursor: "pointer",
+                              },
+                              pressed: { outline: "none" },
+                            }}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-zinc-800 border-zinc-700 text-zinc-100">
+                          {activeCountry?.name}:{" "}
+                          {(activeCountry?.value ?? 0) > 0
+                            ? `${activeCountry?.value.toLocaleString()} visitors`
+                            : "No visitors"}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })
+                }
+              </Geographies>
+            </ZoomableGroup>
+          </ComposableMap>
+        </TooltipProvider>
+      ) : (
+        <div className="h-full w-full flex items-center justify-center">
+          <p className="text-zinc-500 text-center text-sm">
+            No country data available
+          </p>
+        </div>
+      )}
+    </div>
   );
 };
 
