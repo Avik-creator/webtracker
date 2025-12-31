@@ -301,14 +301,18 @@ export const getDomainAnalytics = async (
   // Calculate average load times
   const avgLoadTime =
     filteredPerformanceAnalytics.length > 0
-      ? filteredPerformanceAnalytics.reduce((sum, p) => sum + p.loadTime, 0) /
-        filteredPerformanceAnalytics.length
+      ? filteredPerformanceAnalytics.reduce(
+          (sum, p) => sum + (p.loadTime || 0),
+          0
+        ) / filteredPerformanceAnalytics.length
       : 0;
 
   const previousAvgLoadTime =
     previousPerformanceAnalytics.length > 0
-      ? previousPerformanceAnalytics.reduce((sum, p) => sum + p.loadTime, 0) /
-        previousPerformanceAnalytics.length
+      ? previousPerformanceAnalytics.reduce(
+          (sum, p) => sum + (p.loadTime || 0),
+          0
+        ) / previousPerformanceAnalytics.length
       : 0;
 
   // Return the project with all filtered analytics
