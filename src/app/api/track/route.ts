@@ -269,90 +269,89 @@ export async function POST(req: NextRequest) {
         });
     }
 
-    // Handle country analytics
-    await db
-      .insert(countryAnalytics)
-      .values({
-        analyticsId,
-        countryCode,
-        countryName,
-        visitors: event === "session_start" ? 1 : 0,
-        date: todayISO,
-      })
-      .onConflictDoUpdate({
-        target: [
-          countryAnalytics.analyticsId,
-          countryAnalytics.countryCode,
-          countryAnalytics.date,
-        ],
-        set: {
-          visitors: sql`${countryAnalytics.visitors} + ${
-            event === "session_start" ? 1 : 0
-          }`,
-        },
-      });
+    // Only track visitor demographics on session_start to avoid creating records with 0 visitors
+    if (event === "session_start") {
+      // Handle country analytics
+      await db
+        .insert(countryAnalytics)
+        .values({
+          analyticsId,
+          countryCode,
+          countryName,
+          visitors: 1,
+          date: todayISO,
+        })
+        .onConflictDoUpdate({
+          target: [
+            countryAnalytics.analyticsId,
+            countryAnalytics.countryCode,
+            countryAnalytics.date,
+          ],
+          set: {
+            visitors: sql`${countryAnalytics.visitors} + 1`,
+          },
+        });
 
-    // Handle device analytics
-    await db
-      .insert(deviceAnalytics)
-      .values({
-        analyticsId,
-        deviceType,
-        visitors: event === "session_start" ? 1 : 0,
-        date: todayISO,
-      })
-      .onConflictDoUpdate({
-        target: [
-          deviceAnalytics.analyticsId,
-          deviceAnalytics.deviceType,
-          deviceAnalytics.date,
-        ],
-        set: {
-          visitors: sql`${deviceAnalytics.visitors} + ${
-            event === "session_start" ? 1 : 0
-          }`,
-        },
-      });
+      // Handle device analytics
+      await db
+        .insert(deviceAnalytics)
+        .values({
+          analyticsId,
+          deviceType,
+          visitors: 1,
+          date: todayISO,
+        })
+        .onConflictDoUpdate({
+          target: [
+            deviceAnalytics.analyticsId,
+            deviceAnalytics.deviceType,
+            deviceAnalytics.date,
+          ],
+          set: {
+            visitors: sql`${deviceAnalytics.visitors} + 1`,
+          },
+        });
 
-    // Handle OS analytics
-    await db
-      .insert(osAnalytics)
-      .values({
-        analyticsId,
-        osName: osInfo.name ?? "Unknown",
-        visitors: event === "session_start" ? 1 : 0,
-        date: todayISO,
-      })
-      .onConflictDoUpdate({
-        target: [osAnalytics.analyticsId, osAnalytics.osName, osAnalytics.date],
-        set: {
-          visitors: sql`${osAnalytics.visitors} + ${
-            event === "session_start" ? 1 : 0
-          }`,
-        },
-      });
+      // Handle OS analytics
+      await db
+        .insert(osAnalytics)
+        .values({
+          analyticsId,
+          osName: osInfo.name ?? "Unknown",
+          visitors: 1,
+          date: todayISO,
+        })
+        .onConflictDoUpdate({
+          target: [
+            osAnalytics.analyticsId,
+            osAnalytics.osName,
+            osAnalytics.date,
+          ],
+          set: {
+            visitors: sql`${osAnalytics.visitors} + 1`,
+          },
+        });
 
-    // Handle source analytics
-    await db
-      .insert(sourceAnalytics)
-      .values({
-        analyticsId,
-        sourceName,
-        visitors: event === "session_start" ? 1 : 0,
-        date: todayISO,
-      })
-      .onConflictDoUpdate({
-        target: [
-          sourceAnalytics.analyticsId,
-          sourceAnalytics.sourceName,
-          sourceAnalytics.date,
-        ],
-        set: {
-          visitors: sql`${sourceAnalytics.visitors} + ${
-            event === "session_start" ? 1 : 0
-          }`,
-        },
-      });
+      // Handle source analytics
+      await db
+        .insert(sourceAnalytics)
+        .values({
+          analyticsId,
+          sourceName,
+          visitors: 1,
+          date: todayISO,
+        })
+        .onConflictDoUpdate({
+          target: [
+            sourceAnalytics.analyticsId,
+            sourceAnalytics.sourceName,
+            sourceAnalytics.date,
+          ],
+          set: {
+            visitors: sql`${sourceAnalytics.visitors} + 1`,
+          },
+        });
+    }
 
     if (event === "performance" && data) {
       const {
