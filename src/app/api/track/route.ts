@@ -123,6 +123,7 @@ export async function POST(req: NextRequest) {
       referrer,
       path,
       data,
+      is_new_session,
     } = payload;
 
     if (isLocalhost(url)) {
@@ -269,8 +270,12 @@ export async function POST(req: NextRequest) {
         });
     }
 
-    // Only track visitor demographics on session_start to avoid creating records with 0 visitors
-    if (event === "session_start") {
+    // Only track visitor demographics on session_start or first pageview of new session
+    // This ensures visitor data is captured even if session_start fails
+    const shouldTrackVisitors =
+      event === "session_start" || (event === "pageview" && is_new_session);
+
+    if (shouldTrackVisitors) {
       // Handle country analytics
       await db
         .insert(countryAnalytics)

@@ -55,28 +55,8 @@
           "session_expiration_timestamp",
           expirationTimestamp,
         );
-        isNewSession = true;
-      } else {
-        // Extend the session
-        expirationTimestamp = Date.now() + sessionDuration;
-        sessionStorage.setItem(
-          "session_expiration_timestamp",
-          expirationTimestamp,
-        );
-      }
-  
-      if (isNewSession) {
-        trackSessionStart();
-      }
-  
-      return {
-        sessionId: sessionId,
-        expirationTimestamp: parseInt(expirationTimestamp),
-        isNewSession: isNewSession,
-      };
-    }
-  
-    function isSessionExpired(expirationTimestamp) {
+        // Mark that session_start tracking was sent (initially false, will be set to true after sending)
+        sessionStorage.setItem("session_start_tracked", "false");
       return Date.now() >= expirationTimestamp;
     }
   
@@ -142,43 +122,7 @@
         language: navigator.language,
         user_agent: navigator.userAgent,
         data: eventData || {},
-      };
-  
-      // Using sendBeacon API for more reliable data sending, falling back to XHR
-      if (navigator.sendBeacon && !options?.forceXHR) {
-        navigator.sendBeacon(endpoint, JSON.stringify(payload));
-        options?.callback?.();
-      } else {
-        sendRequest(payload, options);
-      }
-    }
-  
-    // Function to send HTTP requests
-    function sendRequest(payload, options) {
-      var request = new XMLHttpRequest();
-      request.open("POST", endpoint, true);
-      request.setRequestHeader("Content-Type", "application/json");
-      request.onreadystatechange = function () {
-        if (request.readyState === 4) {
-          options?.callback?.();
-        }
-      };
-      request.send(JSON.stringify(payload));
-    }
-  
-    // Queue of tracking events
-    var queue = (window.your_tracking && window.your_tracking.q) || [];
-  
-    // Enhanced API with more options
-    window.your_tracking = function (eventName, eventData, options) {
-      trigger(eventName, eventData, options);
-    };
-  
-    // Public API methods
-    window.your_tracking.pageview = function (customData) {
-      trigger("pageview", customData);
-    };
-  
+        is_new_session: session.isNewSession,
     window.your_tracking.event = function (category, action, label, value) {
       trigger("event", { category, action, label, value });
     };
