@@ -21,7 +21,7 @@ export default function Snippet({ domain, title, description }: SnippetProps) {
   const react_snippet = `<script
   defer
   data-domain="${domain}"
-  src="https://webtracker.avikmukherjee.me/tracking-script.js"
+  src="https://webtracker.avikmukherjee.com/tracking-script.js"
 >
 </script>`
 
@@ -30,7 +30,7 @@ export default function Snippet({ domain, title, description }: SnippetProps) {
 <Script
   defer
   data-domain="${domain}"
-  src="https://webtracker.avikmukherjee.me/tracking-script.js"
+  src="https://webtracker.avikmukherjee.com/tracking-script.js"
 />`
 
   const copySnippet = (snippet: string) => {
